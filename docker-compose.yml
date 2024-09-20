@@ -1,0 +1,19 @@
+version: '1'
+services:
+  bot:
+    container_name: 'xKuCoinBot'
+    stop_signal: SIGINT
+    build:
+      context: .
+    working_dir: /app
+    volumes:
+      - .:/app
+    entrypoint: "python3 main.py"
+    command: ["-a", "1"]
+    restart: unless-stopped
+    networks:
+      - my_custom_network
+
+networks:
+  my_custom_network:
+    external: true

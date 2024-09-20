@@ -37,7 +37,7 @@ async def vertusStart(thread: int, session_name: str, phone_number: str, proxy: 
                         logger.error(f"Vertus | Thread {thread} | {account} | Can't claim daily reward! Response {status}")
 
                 await vertus.complete_all_missions(await vertus.missions_check())
-
+                await vertus.ads()
                 await asyncio.sleep(5)
                 
                 storage = vertus.get_storage(data)

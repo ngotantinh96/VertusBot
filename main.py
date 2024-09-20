@@ -6,7 +6,7 @@ import os
 async def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     print('\nNailambe\'s VertusBot (https://github.com/NailAmber)\n')
-    action = int(input("Select action:\n1. Start soft\n2. Print stats\n3. Create sessions\n\n> "))
+    action = 1
 
     if not os.path.exists('sessions'): os.mkdir('sessions')
     if not os.path.exists('statistics'): os.mkdir('statistics')

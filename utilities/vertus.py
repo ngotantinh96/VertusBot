@@ -20,7 +20,7 @@ class Vertus:
     def __init__(self, thread: int, session_name: str, phone_number: str, proxy: [str, None]):
         self.account = session_name + '.session'
         self.thread = thread
-        self.proxy = f"{config.PROXY_TYPES['REQUESTS']}://{proxy}" if proxy is not None else None
+        self.proxy = None
         self.user_agent_file = "./sessions/user_agents.json"
         self.statistics_file = "./statistics/stats.json"
         self.ref_link_file = "./sessions/ref_links.json"
@@ -129,14 +129,19 @@ class Vertus:
         for i in range(len(missions["groups"])):
             for mission in missions["groups"][i]["missions"][0]:
                 await self.complete_mission(mission)
+
         for i in range(len(missions["sponsors"])):
             for mission in missions["sponsors"][i]:
                 await self.complete_mission(mission)
-        for mission in missions["community"][0]:
-            await self.complete_mission(mission)
+
+        for i in range(len(missions["community"])):
+            for mission in missions["community"][i]:
+                await self.complete_mission(mission)
 
     async def complete_mission(self, mission):
-        if not mission['title'] in config.BLACKLIST_TASK and mission['isCompleted'] == False:
+        if not mission['title'] in config.BLACKLIST_TASK and not mission['_id'] in config.BLACKLIST_TASK_IDS and (mission['isCompleted'] == False):
+            print("Mission:", mission['title'])
+            print("Mission:", mission['_id'])
             if 'link' in mission and 'https://t.me/' in mission['link'] and mission['type'] == 'REGULAR' and mission['resource'] == 'TELEGRAM':
                 await self.client.connect()
                 try:
@@ -149,17 +154,39 @@ class Vertus:
                 await self.client.disconnect()
                 
                 await asyncio.sleep(1)
-
+            
                 resp = await self.session.post('https://api.thevertus.app/missions/check-telegram', json={'missionId': mission['_id']})
             else:
                 resp = await self.session.post('https://api.thevertus.app/missions/complete', json={'missionId': mission['_id']})
-            # try:
-                # resp_json = await resp.json()
-                # print(mission['title'], resp_json['message'])
-            # except Exception as e:
-                # print('e = ', e)
-            await asyncio.sleep(5)
-            
+
+    async def ads(self):
+        try:
+            resp = await self.session.post('https://api.thevertus.app/missions/check-adsgram')
+            resp_json = await resp.json()
+            print(f"{resp_json}")
+
+            isSuccess = resp_json.get("isSuccess")
+            massage = resp_json.get("msg")
+            if isSuccess:
+                print("Ads Reward Claiming.....")
+                time.sleep(30)
+                resp = await self.session.post('https://api.thevertus.app/missions/complete-adsgram', json={}, allow_redirects=True)
+                resp_json = await resp.json()
+                
+                isSuccess = resp_json.get("isSuccess")
+                new_balance = resp_json.get("newBalance") / 10**18 if resp_json.get("newBalance") is not None else 0
+                total_claim = resp_json.get("completion")
+                
+                if isSuccess:
+                    new_balance = f"{new_balance:.3f}"  # Format balance with 3 decimal places
+                    print("Ads Reward Claimed Successfully")
+                    print(f"New Balance: {new_balance} | Total Claim: {total_claim} times")
+                else:
+                    print(f"{resp_json}")
+            else:
+                print(f"{massage}")
+        except Exception as e:
+            print(f"Request failed: {e}")        
 
     async def buy_upgrade_card(self, card_id: str):
         resp = await self.session.post('https://api.thevertus.app/upgrade-cards/upgrade', json={'cardId': card_id})
